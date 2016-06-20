@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">ApplicationA</string>
+    <string name="action_sort">Sort</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <string name="tab_name_test">Тест</string>
+    <string name="tab_name_history">История</string>
+    <string name="hint_link_field">Введите ссылку</string>
+    <string name="try_again">Введите ссылку и попробуйте еще раз</string>
+
+    <string name="sort_by_state">Сортировать по статусу</string>
+    <string name="sort_by_date">Сортировать по дате добавления</string>
+
+</resources>
