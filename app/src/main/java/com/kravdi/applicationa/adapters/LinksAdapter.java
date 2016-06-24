@@ -36,13 +36,15 @@ public class LinksAdapter extends RecyclerView.Adapter<LinksAdapter.ViewHolder> 
         vh.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.kravdi.applicationb");
-                int position = vh.getAdapterPosition();
-                launchIntent.putExtra(MainActivity.FROM_A, "from_history");
-                launchIntent.putExtra(MainActivity.LINK_TAG, links.get(position).getLink());
-                launchIntent.putExtra(LINK_STATE, links.get(position).getState());
-                launchIntent.putExtra(LINK_ID, links.get(position).getId());
-                context.startActivity(launchIntent);
+                if(MainActivity.isPackageInstalled(MainActivity.PACKAGE_NAME_B, context)) {
+                    Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(MainActivity.PACKAGE_NAME_B);
+                    int position = vh.getAdapterPosition();
+                    launchIntent.putExtra(MainActivity.FROM_A, "from_history");
+                    launchIntent.putExtra(MainActivity.LINK_TAG, links.get(position).getLink());
+                    launchIntent.putExtra(LINK_STATE, links.get(position).getState());
+                    launchIntent.putExtra(LINK_ID, links.get(position).getId());
+                    context.startActivity(launchIntent);
+                }
             }
         });
         return vh;

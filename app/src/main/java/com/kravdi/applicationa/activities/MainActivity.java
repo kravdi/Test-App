@@ -1,5 +1,7 @@
 package com.kravdi.applicationa.activities;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -8,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.kravdi.applicationa.fragments.HistorySectionFragment;
 import com.kravdi.applicationa.R;
@@ -17,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String LINK_TAG = "link";
     public static final String FROM_A = "from_A";
-
+    public static final String PACKAGE_NAME_B = "com.kravdi.applicationb";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,4 +86,21 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
+
+    public static boolean isPackageInstalled(String packagename, Context context) {
+        PackageManager pm = context.getPackageManager();
+        try {
+            pm.getPackageInfo(packagename, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            Toast.makeText(context, "Приложение B не установлено", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        this.getContentResolver().unregisterContentObserver(MyProvider.contentObserver);
+//    }
 }

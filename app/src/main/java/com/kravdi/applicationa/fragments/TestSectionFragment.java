@@ -45,10 +45,12 @@ public class TestSectionFragment extends Fragment {
                 if(link.isEmpty()){
                     Toast.makeText(getActivity(), R.string.try_again, Toast.LENGTH_SHORT).show();
                 } else {
-                    Intent launchIntent = getActivity().getPackageManager().getLaunchIntentForPackage("com.kravdi.applicationb");
-                    launchIntent.putExtra(MainActivity.LINK_TAG, link);
-                    launchIntent.putExtra(MainActivity.FROM_A, "from_test");
-                    startActivity(launchIntent);
+                    if(MainActivity.isPackageInstalled(MainActivity.PACKAGE_NAME_B, getActivity())) {
+                        Intent launchIntent = getActivity().getPackageManager().getLaunchIntentForPackage("com.kravdi.applicationb");
+                        launchIntent.putExtra(MainActivity.LINK_TAG, link);
+                        launchIntent.putExtra(MainActivity.FROM_A, "from_test");
+                        startActivity(launchIntent);
+                    }
                 }
             }
         });

@@ -3,11 +3,14 @@ package com.kravdi.applicationa.dbutils;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.UriMatcher;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -38,6 +41,7 @@ public class MyProvider extends ContentProvider {
     static final int URI_LINKS_ID = 2;
 
     private static final UriMatcher uriMatcher;
+   // public static MyContentObserver contentObserver;
 
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -47,7 +51,9 @@ public class MyProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        dataBaseHelper =  DataBaseHelper.getInstance(getContext());
+        dataBaseHelper = DataBaseHelper.getInstance(getContext());
+//        contentObserver = new MyContentObserver(new Handler());
+//        getContext().getContentResolver().registerContentObserver(LINKS_CONTENT_URI, true, contentObserver);
         return true;
     }
 
@@ -103,8 +109,8 @@ public class MyProvider extends ContentProvider {
         db = dataBaseHelper.getWritableDatabase();
         long rowID = db.insert(DataBaseHelper.LINKS_TABLE, null, values);
         Uri resultUri = ContentUris.withAppendedId(LINKS_CONTENT_URI, rowID);
+        getContext().sendBroadcast(new Intent(HistorySectionFragment.ACTION_DATABASE_CHANGED));
         getContext().getContentResolver().notifyChange(resultUri, null);
-        new updateList().execute("");
         return resultUri;
     }
 
@@ -129,8 +135,8 @@ public class MyProvider extends ContentProvider {
         }
         db = dataBaseHelper.getWritableDatabase();
         int cnt = db.delete(DataBaseHelper.LINKS_TABLE, selection, selectionArgs);
+        getContext().sendBroadcast(new Intent(HistorySectionFragment.ACTION_DATABASE_CHANGED));
         getContext().getContentResolver().notifyChange(uri, null);
-        new updateList().execute("");
         return cnt;
     }
 
@@ -156,27 +162,29 @@ public class MyProvider extends ContentProvider {
         }
         db = dataBaseHelper.getWritableDatabase();
         int cnt = db.update(DataBaseHelper.LINKS_TABLE, values, selection, selectionArgs);
+        getContext().sendBroadcast(new Intent(HistorySectionFragment.ACTION_DATABASE_CHANGED));
         getContext().getContentResolver().notifyChange(uri, null);
-        new updateList().execute("");
         return cnt;
     }
 
-    public class updateList extends AsyncTask<String, Void, Cursor> {
+    private class MyContentObserver extends ContentObserver {
+        public MyContentObserver(Handler h) {
+            super(h);
+        }
 
         @Override
-        protected Cursor doInBackground(String... params) {
+        public boolean deliverSelfNotifications() {
+            return true;
+        }
 
-            db = dataBaseHelper.getWritableDatabase();
-
-            if (params[0].isEmpty()) {
-                params[0] = null;
-            }
-
-            if (HistorySectionFragment.linksList.size() > 0)
-                HistorySectionFragment.linksList.clear();
+        @Override
+        public void onChange(boolean selfChange) {
+            Log.d("TAG", "MyContentObserver.onChange(" + selfChange + ")");
+            super.onChange(selfChange);
+            HistorySectionFragment.linksList.clear();
 
             Cursor cursor = db.query(DataBaseHelper.LINKS_TABLE, null, null,
-                    null, null, null, params[0]);
+                    null, null, null, null);
 
             if (cursor.moveToFirst()) {
                 do {
@@ -185,16 +193,8 @@ public class MyProvider extends ContentProvider {
                 } while (cursor.moveToNext());
             }
             cursor.close();
-            return cursor;
-        }
 
-        @Override
-        protected void onPostExecute(Cursor result) {
-            if (result != null) {
-
-                HistorySectionFragment.adapter.notifyDataSetChanged();
-            }
-            db.close();
+            HistorySectionFragment.adapter.notifyDataSetChanged();
         }
     }
 }

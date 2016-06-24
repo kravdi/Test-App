@@ -1,5 +1,9 @@
 package com.kravdi.applicationa.fragments;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -23,10 +27,14 @@ import java.util.ArrayList;
 
 public class HistorySectionFragment extends Fragment {
 
+     public static final String ACTION_DATABASE_CHANGED = "com.kravdi.applicationa.DATABASE_CHANGED";
+
+
     private static HistorySectionFragment fragment;
     public static LinksAdapter adapter;
     public static ArrayList<Links> linksList = new ArrayList<>();
     private SQLiteDatabase database;
+    private BroadcastReceiver databaseChangeReceiver;
 
     public HistorySectionFragment() {
     }
@@ -55,6 +63,26 @@ public class HistorySectionFragment extends Fragment {
 
         new GetLinks().execute("");
 
+        databaseChangeReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Cursor cursor = database.query(DataBaseHelper.LINKS_TABLE, null, null,
+                        null, null, null, null);
+
+                    linksList.clear();
+
+                if (cursor.moveToFirst()) {
+                    do {
+                        Links link = cursorToLink(cursor);
+                        linksList.add(link);
+                    } while (cursor.moveToNext());
+                }
+                cursor.close();
+                adapter.notifyDataSetChanged();
+            }
+        };
+        getActivity().registerReceiver(databaseChangeReceiver, new IntentFilter(ACTION_DATABASE_CHANGED));
         setHasOptionsMenu(true);
 
         return rootView;
@@ -100,11 +128,13 @@ public class HistorySectionFragment extends Fragment {
         @Override
         protected Cursor doInBackground(String... params) {
 
-            DataBaseHelper dataBaseHelper = DataBaseHelper.getInstance(getActivity());
-            database = dataBaseHelper.getWritableDatabase();
             if (params[0].isEmpty()) {
                 params[0] = null;
             }
+
+            DataBaseHelper dataBaseHelper = DataBaseHelper.getInstance(getActivity());
+            database = dataBaseHelper.getWritableDatabase();
+
             Cursor cursor = database.query(DataBaseHelper.LINKS_TABLE, null, null,
                     null, null, null, params[0]);
 
@@ -125,11 +155,18 @@ public class HistorySectionFragment extends Fragment {
         @Override
         protected void onPostExecute(Cursor result) {
             if (result != null) {
-
                 adapter.notifyDataSetChanged();
             }
-            database.close();
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (databaseChangeReceiver != null) {
+            getActivity().unregisterReceiver(databaseChangeReceiver);
+            databaseChangeReceiver = null;
+        }
+        database.close();
+    }
 }
